@@ -1,0 +1,12 @@
+#This will redirect any stray Http requests to the public folder
+
+Options +FollowSymLinks
+
+<ifmodule mod_rewrite.c="">
+    # Tell PHP mod rewrite is enabled
+
+    SetEnv HTTP_MOD_REWRITE On
+    RewriteEngine on
+    RewriteRule ^$   public/   [L]
+    RewriteRule (.*) public/$1 [L]
+</ifmodule>

@@ -1,0 +1,13 @@
+# Direct all Http requests to index.php with the variable _route
+
+Options +FollowSymLinks
+
+<ifmodule mod_rewrite.c>
+    # Tell PHP that mod rewrite is enabled
+
+    SetEnv HTTP_MOD_REWRITE On
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L,QSA]
+</ifmodule>
