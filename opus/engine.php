@@ -29,6 +29,11 @@
         'vendor'    => ROOT . DS . "vendor"
     ));
 
+    //Register AutoLoader
+    $controllers = new \Opus\AutoLoad('Controller', Application::getPath('app') . DS . 'controllers');
+    $controllers->register();
+    Controller\IndexController::test();
+
     //Register timezone
     if (Config::get('app.timezone')) {
         date_default_timezone_set(Opus\Config::get('app.timezone'));
