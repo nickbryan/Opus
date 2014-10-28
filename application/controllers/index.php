@@ -1,6 +1,6 @@
 <?php namespace Controller;
 
-class IndexController {
+class Index {
     public static function test()
     {
         echo "hello this is index controller";

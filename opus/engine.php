@@ -30,9 +30,14 @@
     ));
 
     //Register AutoLoader
-    $controllers = new \Opus\AutoLoad('Controller', Application::getPath('app') . DS . 'controllers');
-    $controllers->register();
-    Controller\IndexController::test();
+//    $controllers = new \Opus\AutoLoad('Controller', Application::getPath('app') . DS . 'controllers');
+//    $controllers->register();
+
+    $loader = new \Opus\AutoLoad();
+    $loader->register();
+    $loader->addNamespace('Controller', Application::getPath('app') . DS . 'controllers');
+    Controller\Index::test();
+    Controller\About::test();
 
     //Register timezone
     if (Config::get('app.timezone')) {

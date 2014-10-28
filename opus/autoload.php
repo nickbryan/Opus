@@ -1,70 +1,166 @@
 <?php namespace Opus;
 
+/**
+ * Class AutoLoad
+ *
+ * A PSR04 autoloader class.
+ *
+ *
+ * @package Opus
+ */
 
 class AutoLoad {
-    private $namespace;
-    private $includePath;
+
+    /**
+     * Associative array that holds the namespace as
+     * the key and the base directories (as an array)
+     * as the value.
+     *
+     * @var array
+     */
+    private $namespaces = array();
+
+    /**
+     * Holds the file extension of the classes
+     * to be loaded.
+     *
+     * @var string
+     */
     private $fileExtension = '.php';
-    private $namespaceSeparator = "\\";
 
-    public function __construct($namespace = null, $includePath = null)
-    {
-        $this->namespace = $namespace;
-        $this->includePath = $includePath;
-    }
-
-    public function loadClass($className)
-    {
-        $classNameSpace = substr($className, 0, strlen($this->namespace . $this->namespaceSeparator));
-
-        if (is_null($this->namespace) || $this->namespace . $this->namespaceSeparator === $classNameSpace) {
-            $fileName = '';
-            $namespace = '';
-            $namespaceClass = strripos($className, $this->namespaceSeparator);
-
-            if ($namespaceClass !== false) {
-                $namespace = substr($className, 0, $namespaceClass);
-                $className = substr($className, $namespaceClass + 1);
-                $fileName = str_replace($this->namespaceSeparator, DS, $namespace) . DS;
-            }
-            $fileName .= str_replace('_', DS, $className) . $this->fileExtension;
-
-            if (isnull($this->includePath) === false) {
-                require $this->includePath . DS . $fileName;
-            } else {
-                require '' . $fileName;
-            }
-        }
-    }
-
-    public function register()
-    {
-        spl_autoload_register(array($this, 'loadClass'));
-    }
-
-    public function unRegister()
-    {
-        spl_autoload_unregister(array($this, 'loadClass'));
-    }
-
+    /**
+     * Sets the file extension to be used by
+     * the class loader.
+     *
+     * @param $fileExtension
+     * @return void
+     */
     public function setFileExtension($fileExtension)
     {
         $this->fileExtension = $fileExtension;
     }
 
+    /**
+     * Returns the file extension that will be
+     * used by the class loader.
+     *
+     * @return string
+     */
     public function getFileExtension()
     {
         return $this->fileExtension;
     }
 
-    public function setNamespaceSeparator($namespaceSeparator)
+    /**
+     * Register the autoloader using SPL.
+     *
+     * @return void
+     */
+    public function register()
     {
-        $this->namespaceSeparator = $namespaceSeparator;
+        spl_autoload_register(array($this, 'loadClass'));
     }
 
-    public function getNamespaceSeparator()
+    /**
+     * Unregister the autholoader using SPL.
+     *
+     * @return void
+     */
+    public function unregister()
     {
-        return $this->namespaceSeparator;
+        spl_autoload_unregister(array($this, 'loadClass'));
     }
 
-} 
+    /**
+     * Maps the key (namespace) and values (base directories)
+     * to the $namespaces array.
+     *
+     * @param $namespace
+     * @param $baseDirectory
+     * @param bool $prepend
+     * @return void
+     */
+    public function addNamespace($namespace, $baseDirectory, $prepend = false)
+    {
+        $namespace = trim($namespace, '\\') . '\\';
+
+        $baseDirectory = rtrim(rtrim($baseDirectory, '/'), DS) . '/';
+
+        if (isset($this->namespaces[$namespace]) === false) {
+            $this->namespaces[$namespace] = array();
+        }
+
+        if ($prepend) {
+            array_unshift($this->namespaces[$namespace], $baseDirectory);
+        } else {
+            array_push($this->namespaces[$namespace], $baseDirectory);
+        }
+    }
+
+    /**
+     * Loads the class file for a given class name.
+     * Used by spl_autoload_register.
+     *
+     * @param $className
+     * @return bool|string
+     */
+    public function loadClass($className)
+    {
+        $namespace = $className;
+
+        while (false !== $pos = strrpos($namespace, '\\')) {
+            $namespace = substr($className, 0, $pos +1);
+
+            $relativeClass = substr($className, $pos + 1);
+
+            $mappedFile = $this->loadMappedFile($namespace, $relativeClass);
+            if ($mappedFile) {
+                return $mappedFile;
+            }
+
+            $namespace = rtrim($namespace, '\\');
+        }
+
+        return false;
+    }
+
+    /**
+     * Load the mapped file for a namespace and relative class.
+     *
+     * @param $namespace
+     * @param $relativeClass
+     * @return bool|string
+     */
+    private function loadMappedFile($namespace, $relativeClass)
+    {
+        if (isset($this->namespaces[$namespace]) === false) {
+            return false;
+        }
+
+        foreach ($this->namespaces[$namespace] as $baseDirectory) {
+            $file = $baseDirectory . str_replace('\\', '/', $relativeClass) . $this->fileExtension;
+
+            if ($this->requireFile($file)) {
+                return $file;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * If a file exists, return it.
+     *
+     * @return void
+     */
+    private function requireFile($file)
+    {
+        if (is_file($file)) {
+            require $file;
+
+            return true;
+        }
+
+        return false;
+    }
+}
