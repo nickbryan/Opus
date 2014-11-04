@@ -5,6 +5,10 @@
  *
  * A PSR04 autoloader class.
  *
+ * TODO: improve comments based on https://github.com/keradus/Psr4Autoloader/blob/master/src/Psr4Autoloader.php
+ * and https://gist.github.com/jwage/221634
+ * TODO: improve variable names and add namespace seperator methods
+ * TODO: sort out the while loop
  *
  * @package Opus
  */
@@ -78,7 +82,7 @@ class AutoLoad {
      * @param $namespace
      * @param $baseDirectory
      * @param bool $prepend
-     * @return void
+     * @return $this
      */
     public function addNamespace($namespace, $baseDirectory, $prepend = false)
     {
@@ -95,6 +99,8 @@ class AutoLoad {
         } else {
             array_push($this->namespaces[$namespace], $baseDirectory);
         }
+
+        return $this;
     }
 
     /**

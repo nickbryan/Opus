@@ -1,69 +1,23 @@
 <?php namespace Opus;
 
 class Route {
-
-    private $url;
-
-    private $name;
-
+    /**
+     * A list of all currently supported methods.
+     *
+     * @var array
+     */
     private $methods = array('GET', 'POST', 'PUT', 'DELETE');
 
-    private $target;
-
-    private $parameters;
-
-    public function getUrl() {
-        return $this->url;
-    }
-
-    public function setUrl($url)
+    /**
+     * @param $method
+     * @return bool
+     */
+    protected function methodCheck($method)
     {
-        // Make sure the url is a string
-        $url = (string)$url;
-
-        // The url needs to be suffixed with a forward slash
-        if (substr($url, -1) !== '/') {
-            $url .= '/';
+        if (in_array($method, $this->methods)) {
+            return true;
+        } else {
+            return false;
         }
-
-        $this->url = $url;
-    }
-
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    public function setName($name) {
-        $this->name = (string)$name;
-    }
-
-    public function getMethods() {
-        return $this->methods;
-    }
-
-    public function setMethods($methods)
-    {
-        $this->methods = $methods;
-    }
-
-    public function getTarget()
-    {
-        return $this->target;
-    }
-
-    public function setTarget($target)
-    {
-        $this->target = $target;
-    }
-
-    public function getParameters()
-    {
-        return $this->parameters;
-    }
-
-    public function setParameters($parameters)
-    {
-        $this->parameters = $parameters;
     }
 }

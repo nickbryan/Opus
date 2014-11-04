@@ -3,12 +3,10 @@
 /**
  * Class Application
  *
- * We only want this to be instantiated once so lets make it a singleton to be safe
- *
  * @package Opus
  */
 
-class Application {
+class Application extends Container {
 
     /**
      * Framework version
@@ -18,60 +16,18 @@ class Application {
     const VERSION = '1.0';
 
     /**
-     * Singleton instance of the class
-     *
-     * @var object
-     */
-    private static $instance;
-
-    /**
      * Indicates if the application has been initialised
      *
      * @var bool
      */
-    private static $booted = false;
+    private $booted = false;
 
     /**
      * Holds a list of all path aliases
      *
      * @var array
      */
-    private static $paths = array();
-
-    /**
-     * Returns the instance of the class ensuring
-     * it is only ever instantiated once
-     *
-     * @return object
-     */
-    public static function getInstance()
-    {
-        if (isset(static::$instance) === false) {
-            static::$instance = new Application();
-        }
-
-        return static::$instance;
-    }
-
-    /**
-     * This will prevent the class from being instantiated
-     *
-     * @access private
-     */
-    private function __construct()
-    {
-
-    }
-
-    /**
-     * This will stop the class from being cloned
-     *
-     * @access private
-     */
-    private function __clone()
-    {
-
-    }
+    private $paths = array();
 
     /**
      * Initialise the application
@@ -79,25 +35,35 @@ class Application {
      * @access private
      * @return bool
      */
-    public static function initialise()
+
+    public function __construct()
     {
-        if (static::$booted) {
+        $this->instance('config', new Config($this));
+    }
+
+    public function initialise()
+    {
+        if ($this->booted) {
             return true;
         }
 
         Session::start();
 
-        /** tests */
-        Router::register('/', function() {
-            return "This is the index page";
-        });
+        $this->mapAlias();
 
-        Router::register('about', function() {
-            return "This is the about page!";
-        });
-        var_dump(Router::callRoute());
+        $router = new Router();
+        require_once $this->getPath('app') . '/routes.php';
 
-        static::$booted = true;
+        $match = $router->match();
+
+        if ($match && is_callable($match['target'])) {
+            call_user_func_array($match['target'], $match['params']);
+        } else {
+            header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
+            // Add in exception handling here
+        }
+
+        $this->booted = true;
     }
 
     /**
@@ -107,8 +73,8 @@ class Application {
      * @param $paths
      * @return void
      */
-    public static function setPaths($paths) {
-        static::$paths = $paths;
+    public function setPaths($paths) {
+        $this->paths = $paths;
     }
 
     /**
@@ -118,11 +84,18 @@ class Application {
      * @throws \Exception
      * @return string
      */
-    public static function getPath($path) {
-        if (array_key_exists($path, static::$paths)) {
-            return static::$paths[$path];
+    public function getPath($path) {
+        if (array_key_exists($path, $this->paths)) {
+            return $this->paths[$path];
         } else {
             throw new \Exception("Path $path not found");
+        }
+    }
+
+    private function mapAlias()
+    {
+        foreach ($this['config']->get('app.class_alias') as $class => $alias) {
+            class_alias($class, $alias);
         }
     }
 }

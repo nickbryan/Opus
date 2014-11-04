@@ -15,11 +15,13 @@
     require_once(ROOT . DS . "vendor" . DS ."autoload.php");
 
     // Register Class Imports
-    use Opus\Config;
     use Opus\Application;
+    use Opus\AutoLoad;
+
+    $app = new Application();
 
     // Set path aliases
-    Application::setPaths(array(
+    $app->setPaths(array(
         'root'      => ROOT,
         'app'       => ROOT . DS . "application",
         'tmp'       => ROOT . DS . "tmp",
@@ -29,23 +31,18 @@
         'vendor'    => ROOT . DS . "vendor"
     ));
 
-    //Register AutoLoader
-//    $controllers = new \Opus\AutoLoad('Controller', Application::getPath('app') . DS . 'controllers');
-//    $controllers->register();
-
-    $loader = new \Opus\AutoLoad();
-    $loader->register();
-    $loader->addNamespace('Controller', Application::getPath('app') . DS . 'controllers');
-    Controller\Index::test();
-    Controller\About::test();
+    $loader = new AutoLoad();
+    $loader->addNamespace('Controller', $app->getPath('app') . DS . 'controllers')
+           ->addNamespace('Model', $app->getPath('app'). DS . 'models')
+           ->register();
 
     //Register timezone
-    if (Config::get('app.timezone')) {
-        date_default_timezone_set(Opus\Config::get('app.timezone'));
+    if ($app['config']->get('app.timezone')) {
+        date_default_timezone_set($app['config']->get('app.timezone'));
     }
 
     // Set error reporting based on environment
-    if (Config::get('app.environment') == 'development') {
+    if ($app['config']->get('app.environment') == 'development') {
         error_reporting(E_ALL);
         ini_set('display_erros', 'On');
     } else {
@@ -56,4 +53,4 @@
     }
 
     // Start the application
-    Application::initialise();
+    $app->initialise();
